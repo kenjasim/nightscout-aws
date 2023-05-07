@@ -1,0 +1,64 @@
+version: '3.9'
+services:
+  nightscout:
+    image: nightscout/cgm-remote-monitor:latest
+    container_name: nightscout
+    restart: always
+    profiles:
+      - nightscout
+    environment:
+      ### Variables for the container
+      NODE_ENV: production
+      ALARM_HIGH: ${ALARM_HIGH}
+      ALARM_LOW: ${ALARM_LOW}
+      ALARM_TIMEAGO_URGENT: ${ALARM_TIMEAGO_URGENT}
+      ALARM_TIMEAGO_URGENT_MINS: ${ALARM_TIMEAGO_URGENT_MINS}
+      ALARM_TIMEAGO_WARN: ${ALARM_TIMEAGO_WARN}
+      ALARM_TIMEAGO_WARN_MINS: ${ALARM_TIMEAGO_WARN_MINS}
+      ALARM_TYPES: ${ALARM_TYPES}
+      ALARM_URGENT_HIGH: ${ALARM_URGENT_HIGH}
+      ALARM_URGENT_LOW: ${ALARM_URGENT_LOW}
+      API_SECRET: ${API_SECRET}
+      AUTH_DEFAULT_ROLES: ${AUTH_DEFAULT_ROLES}
+      BG_HIGH: ${BG_HIGH}
+      BG_LOW: ${BG_LOW}
+      BG_TARGET_BOTTOM: ${BG_TARGET_BOTTOM}
+      BG_TARGET_TOP: ${BG_TARGET_TOP}
+      BOLUS_RENDER_OVER: ${BOLUS_RENDER_OVER}
+      DISPLAY_UNITS: ${DISPLAY_UNITS}
+      ENABLE: ${ENABLE}
+      MONGODB_URI: ${MONGODB_URI}
+      NIGHT_MODE: ${NIGHT_MODE}
+      SHOW_PLUGINS: ${SHOW_PLUGINS}
+      SHOW_RAWBG: ${SHOW_RAWBG}
+      THEME: ${THEME}
+      TIME_FORMAT: ${TIME_FORMAT}
+      BASE_URL: ${BASE_URL}
+      INSECURE_USE_HTTP: ${INSECURE_USE_HTTP}
+    networks:
+      - nightscout_network
+  nginx:
+    image: nginx:1.15-alpine
+    container_name: nginx
+    restart: always
+    profiles:
+      - nightscout
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d/:ro
+      - ./certbot/www:/var/www/certbot/:ro
+      - ./certbot/conf/:/etc/nginx/ssl/:ro
+    networks:
+      - nightscout_network
+  certbot:
+    image: certbot/certbot:latest
+    profiles:
+      - donotstart
+    volumes:
+      - ./certbot/www/:/var/www/certbot/:rw
+      - ./certbot/conf/:/etc/letsencrypt/:rw
+networks:
+   nightscout_network:
+    
